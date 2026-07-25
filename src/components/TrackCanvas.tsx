@@ -3,7 +3,6 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { KeyboardControls, useGLTF, useKeyboardControls, useTexture } from "@react-three/drei";
 import * as THREE from "three";
 import { useActiveCar, useLab } from "../store/lab";
-import { VehicleAudio } from "../lib/vehicleAudio";
 import {
   FIXED_DT,
   MAX_SUBSTEPS,
@@ -292,23 +291,6 @@ function DriveCar() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const audio = useRef<VehicleAudio | null>(null);
-  useEffect(() => {
-    audio.current = new VehicleAudio();
-    const unlock = () => {
-      void audio.current?.ensure();
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-    window.addEventListener("pointerdown", unlock);
-    window.addEventListener("keydown", unlock);
-    return () => {
-      audio.current?.stop();
-      window.removeEventListener("pointerdown", unlock);
-      window.removeEventListener("keydown", unlock);
-    };
-  }, []);
-
   useFrame((_, dt) => {
     const keys = getKeys();
     const setup = setupFromTuning(tuning);
@@ -397,14 +379,6 @@ function DriveCar() {
       persp.fov = THREE.MathUtils.lerp(persp.fov, 52 + st.fovPunch, 0.1);
       persp.updateProjectionMatrix();
     }
-
-    void audio.current?.ensure();
-    audio.current?.update({
-      rpm: v.rpm,
-      throttle: Math.max(0, input.throttle),
-      slip: v.slipMag,
-      speed: speedMs,
-    });
 
     setTelemetry({
       speed: speedKmh,

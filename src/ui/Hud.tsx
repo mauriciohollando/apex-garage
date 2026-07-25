@@ -139,7 +139,7 @@ export function Hud() {
           <div className="zone-pill">{telemetry.zone}</div>
           <div className="help">
             WASD / arrows to drive · Space to brake · R to respawn. Engine → trap speed · Tires → skidpad grip · Aero →
-            high-speed stability. Click once to enable engine audio.
+            high-speed stability.
           </div>
         </>
       )}
