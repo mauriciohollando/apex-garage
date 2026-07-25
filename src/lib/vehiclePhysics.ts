@@ -120,13 +120,15 @@ export function stepVehicle(s: VehicleState, input: VehicleInput, setup: CarSetu
   const vxSafe = Math.abs(s.vx) < eps ? eps * Math.sign(s.vx || 1) : s.vx;
   const slipF = Math.atan2(s.vy + setup.cgToFront * s.yawRate, vxSafe) - steer;
   const slipR = Math.atan2(s.vy - setup.cgToRear * s.yawRate, vxSafe);
+  // Below walking pace slip angles are numerically meaningless, so fade tires in
+  const slipGate = Math.max(0, Math.min(1, (speed - 0.6) / 2.5));
   s.slipFront = slipF;
   s.slipRear = slipR;
-  s.slipMag = Math.min(1.4, (Math.abs(slipF) + Math.abs(slipR)) * 0.55);
+  s.slipMag = Math.min(1.4, (Math.abs(slipF) + Math.abs(slipR)) * 0.55) * slipGate;
 
   // Lateral tire forces (body frame; front rotated by steer)
-  const FyF_tire = -pacejkaLat(slipF, loadF, setup);
-  const FyR_tire = -pacejkaLat(slipR, loadR, setup);
+  const FyF_tire = -pacejkaLat(slipF, loadF, setup) * slipGate;
+  const FyR_tire = -pacejkaLat(slipR, loadR, setup) * slipGate;
 
   const cosD = Math.cos(steer);
   const sinD = Math.sin(steer);
@@ -137,8 +139,10 @@ export function stepVehicle(s: VehicleState, input: VehicleInput, setup: CarSetu
   const FxReverse = Math.min(0, input.throttle) * setup.driveForce * 0.42;
   const FxBrakeF = input.brake * setup.brakeForce * setup.brakeBias * brakeDir;
   const FxBrakeR = input.brake * setup.brakeForce * (1 - setup.brakeBias) * brakeDir;
-  const FxDrag = setup.dragCoeff * speed * speed * Math.sign(s.vx || 1);
-  const FxRoll = setup.rollResist * setup.mass * g * Math.sign(s.vx || 1);
+  // Resistive forces must vanish at rest or they jitter the car back and forth
+  const rolling = Math.abs(s.vx) > 0.2 ? Math.sign(s.vx) : 0;
+  const FxDrag = setup.dragCoeff * speed * speed * rolling;
+  const FxRoll = setup.rollResist * setup.mass * g * rolling;
 
   // Front tire frame → body frame
   const FxF_body = FxBrakeF * cosD - FyF_tire * sinD;
@@ -155,21 +159,26 @@ export function stepVehicle(s: VehicleState, input: VehicleInput, setup: CarSetu
   s.ay = ay;
 
   const yawTorque = setup.cgToFront * FyF_body - setup.cgToRear * FyR_body + setup.cgToFront * FxBrakeF * sinD;
-  s.yawRate += (yawTorque / setup.yawInertia) * dt;
+  // Yaw damping keeps the rear from oscillating at the limit
+  const yawDamp = -s.yawRate * setup.yawInertia * 0.9;
+  s.yawRate += ((yawTorque + yawDamp) / setup.yawInertia) * dt;
+  s.yawRate = Math.max(-2.6, Math.min(2.6, s.yawRate));
 
-  s.vx += ax * dt;
-  s.vy += ay * dt;
+  // Rotating-reference-frame terms: without these the car never settles into a turn
+  s.vx += (ax + s.vy * s.yawRate) * dt;
+  s.vy += (ay - s.vx * s.yawRate) * dt;
 
-  if (speed < 0.4 && input.throttle === 0 && input.brake > 0.15) {
-    s.vx *= 0.88;
-    s.vy *= 0.82;
-    s.yawRate *= 0.88;
+  if (speed < 0.4 && input.throttle === 0) {
+    s.vx *= 0.9;
+    s.vy *= 0.85;
+    s.yawRate *= 0.85;
   }
 
+  // Body forward is +Z in local space, so world forward = (sin yaw, cos yaw)
   const cosY = Math.cos(s.yaw);
   const sinY = Math.sin(s.yaw);
-  s.x += (cosY * s.vx - sinY * s.vy) * dt;
-  s.z += (sinY * s.vx + cosY * s.vy) * dt;
+  s.x += (sinY * s.vx + cosY * s.vy) * dt;
+  s.z += (cosY * s.vx - sinY * s.vy) * dt;
   s.yaw += s.yawRate * dt;
 
   s.x = Math.max(-70, Math.min(70, s.x));

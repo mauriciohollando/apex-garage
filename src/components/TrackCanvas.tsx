@@ -266,7 +266,7 @@ function DriveCar() {
   }, [scene]);
 
   const sim = useRef({
-    vehicle: createVehicleState({ x: 0, z: 14, yaw: 0 }),
+    vehicle: createVehicleState({ x: 0, z: 22, yaw: 0 }),
     acc: 0,
     bestLap: 0,
     lapTime: 0,
@@ -277,6 +277,20 @@ function DriveCar() {
     shake: 0,
     fovPunch: 0,
   });
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code !== "KeyR") return;
+      const st = sim.current;
+      st.vehicle = createVehicleState({ x: 0, z: 22, yaw: 0 });
+      st.lapTime = 0;
+      st.crossed = false;
+      st.trapArmed = false;
+      useLab.getState().resetLap();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const audio = useRef<VehicleAudio | null>(null);
   useEffect(() => {
@@ -363,9 +377,10 @@ function DriveCar() {
     // Camera: follow velocity heading with lag + FOV punch + shake
     const cosY = Math.cos(v.yaw);
     const sinY = Math.sin(v.yaw);
-    const wvx = cosY * v.vx - sinY * v.vy;
-    const wvz = sinY * v.vx + cosY * v.vy;
-    const moveYaw = speedMs > 1.2 ? Math.atan2(wvx, wvz) : v.yaw;
+    const wvx = sinY * v.vx + cosY * v.vy;
+    const wvz = cosY * v.vx - sinY * v.vy;
+    // Only track the velocity vector when driving forward, otherwise the camera flips in reverse
+    const moveYaw = v.vx > 1.2 ? Math.atan2(wvx, wvz) : v.yaw;
 
     st.fovPunch = THREE.MathUtils.lerp(st.fovPunch, Math.max(0, input.throttle) * 6 + speedMs * 0.15, 0.08);
     st.shake = THREE.MathUtils.lerp(st.shake, v.slipMag > 0.35 ? v.slipMag * 0.15 : 0, 0.2);
