@@ -12,6 +12,16 @@ export class VehicleAudio {
   private master: GainNode | null = null;
   private started = false;
 
+  // rAF (and therefore update()) pauses in hidden tabs, but oscillators keep
+  // playing at their last volume — so silence the context whenever the page hides.
+  private onVisibility = () => {
+    if (!this.ctx) return;
+    if (document.hidden) void this.ctx.suspend();
+    else void this.ctx.resume();
+  };
+
+  private onPageHide = () => this.stop();
+
   async ensure() {
     if (this.started) return;
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
@@ -46,6 +56,8 @@ export class VehicleAudio {
     this.squeal.start();
 
     this.started = true;
+    document.addEventListener("visibilitychange", this.onVisibility);
+    window.addEventListener("pagehide", this.onPageHide);
     if (this.ctx.state === "suspended") await this.ctx.resume();
   }
 
@@ -66,7 +78,11 @@ export class VehicleAudio {
   }
 
   stop() {
+    document.removeEventListener("visibilitychange", this.onVisibility);
+    window.removeEventListener("pagehide", this.onPageHide);
     try {
+      // Cut the master gain immediately so nothing lingers while close() resolves
+      if (this.master && this.ctx) this.master.gain.setValueAtTime(0, this.ctx.currentTime);
       this.engine?.stop();
       this.squeal?.stop();
       void this.ctx?.close();
