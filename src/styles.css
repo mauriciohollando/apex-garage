@@ -299,8 +299,11 @@ canvas {
   bottom: 28px;
   transform: translateX(-50%);
   display: flex;
-  gap: 18px;
+  gap: 12px;
   align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: calc(100vw - 40px);
 }
 
 .gauge {
@@ -339,8 +342,24 @@ canvas {
   color: var(--muted);
   font-size: 0.78rem;
   letter-spacing: 0.04em;
-  max-width: 280px;
+  max-width: 320px;
   line-height: 1.45;
+}
+
+.zone-pill {
+  position: absolute;
+  top: 88px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 8px 16px;
+  border: 1px solid var(--stroke);
+  background: var(--panel);
+  backdrop-filter: blur(12px);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--gold);
 }
 
 .credit {

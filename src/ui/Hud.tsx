@@ -116,13 +116,30 @@ export function Hud() {
               <div className="unit">best {formatTime(telemetry.bestLap)}</div>
             </div>
             <div className="gauge">
+              <div className="label">Lat G</div>
+              <div className="value">{Math.abs(telemetry.lateralG).toFixed(1)}</div>
+              <div className="unit">
+                long {telemetry.longG >= 0 ? "+" : ""}
+                {telemetry.longG.toFixed(1)}
+              </div>
+            </div>
+            <div className="gauge">
               <div className="label">Slip</div>
               <div className="value">{Math.round(telemetry.slip * 100)}</div>
               <div className="unit">%</div>
             </div>
+            <div className="gauge">
+              <div className="label">Trap</div>
+              <div className="value" style={{ fontSize: "1.8rem" }}>
+                {telemetry.trapSpeed ? Math.round(telemetry.trapSpeed) : "--"}
+              </div>
+              <div className="unit">best {telemetry.bestTrap ? Math.round(telemetry.bestTrap) : "--"}</div>
+            </div>
           </div>
+          <div className="zone-pill">{telemetry.zone}</div>
           <div className="help">
-            Drive with WASD / arrows. Space to brake. Tuning changes apply live on track.
+            WASD / arrows to drive · Space to brake. Engine → trap speed · Tires → skidpad grip · Aero → high-speed
+            stability. Click once to enable engine audio.
           </div>
         </>
       )}
