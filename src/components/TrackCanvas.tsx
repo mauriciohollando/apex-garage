@@ -436,9 +436,23 @@ function DriveCar() {
     const st = sim.current;
     const v = st.vehicle;
 
+    const reverseHeld = keys.back || keys.brake;
+    // S / Space: brake while still rolling forward, then reverse once nearly stopped
+    let throttle = 0;
+    let brake = 0;
+    if (keys.forward && !reverseHeld) {
+      throttle = 1;
+    } else if (reverseHeld && !keys.forward) {
+      if (v.vx > 1.2) {
+        brake = 1;
+      } else {
+        throttle = -0.55;
+      }
+    }
+
     const input = {
-      throttle: keys.forward ? 1 : keys.back ? -0.55 : 0,
-      brake: keys.brake ? 1 : 0,
+      throttle,
+      brake,
       steer: (keys.left ? 1 : 0) - (keys.right ? 1 : 0),
     };
 

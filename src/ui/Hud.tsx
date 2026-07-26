@@ -164,8 +164,8 @@ export function Hud() {
             </div>
           )}
           <div className="help">
-            WASD / arrows to drive · Space to brake · R to respawn. Approach buildings for menus · knock crate piles
-            over. Engine → trap speed · Tires → skidpad grip.
+            WASD / arrows to drive · S or Space to brake then reverse · R to respawn. Approach buildings for menus ·
+            knock crate piles over. Engine → trap speed · Tires → skidpad grip.
           </div>
         </>
       )}
