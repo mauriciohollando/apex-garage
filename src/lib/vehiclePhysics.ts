@@ -136,7 +136,7 @@ export function stepVehicle(s: VehicleState, input: VehicleInput, setup: CarSetu
   // Longitudinal
   const brakeDir = s.vx >= -0.05 ? -1 : 1;
   const FxEngine = Math.max(0, input.throttle) * setup.driveForce;
-  const FxReverse = Math.min(0, input.throttle) * setup.driveForce * 0.42;
+  const FxReverse = Math.min(0, input.throttle) * setup.driveForce * 1.26;
   const FxBrakeF = input.brake * setup.brakeForce * setup.brakeBias * brakeDir;
   const FxBrakeR = input.brake * setup.brakeForce * (1 - setup.brakeBias) * brakeDir;
   // Resistive forces must vanish at rest or they jitter the car back and forth

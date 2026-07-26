@@ -100,23 +100,6 @@ function CircuitTrack() {
       <LaneMark position={[0, 0.03, 74]} size={[0.25, 8]} />
       <LaneMark position={[0, 0.03, 88]} size={[0.25, 8]} />
 
-      <mesh position={[-5.2, 1.2, 60]}>
-        <boxGeometry args={[0.3, 2.4, 0.3]} />
-        <meshStandardMaterial color="#f5c542" emissive="#f5c542" emissiveIntensity={0.6} />
-      </mesh>
-      <mesh position={[5.2, 1.2, 60]}>
-        <boxGeometry args={[0.3, 2.4, 0.3]} />
-        <meshStandardMaterial color="#f5c542" emissive="#f5c542" emissiveIntensity={0.6} />
-      </mesh>
-      <mesh position={[-5.2, 1.2, 88]}>
-        <boxGeometry args={[0.3, 2.4, 0.3]} />
-        <meshStandardMaterial color="#e11d2e" emissive="#e11d2e" emissiveIntensity={0.6} />
-      </mesh>
-      <mesh position={[5.2, 1.2, 88]}>
-        <boxGeometry args={[0.3, 2.4, 0.3]} />
-        <meshStandardMaterial color="#e11d2e" emissive="#e11d2e" emissiveIntensity={0.6} />
-      </mesh>
-
       {/* Skidpad east of the circuit + access road */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[72, 0.01, 45]} receiveShadow>
         <ringGeometry args={[10, 16, 64]} />
@@ -137,31 +120,7 @@ function CircuitTrack() {
       <TrackProp url="/models/track/decoration-forest.glb" map={map} position={[90, 0, 70]} scale={1.1} />
       <TrackProp url="/models/track/track-finish.glb" map={map} position={[0, 0.02, 12]} scale={0.9} />
 
-      <Sign position={[-9, 0, 74]} label="# SPEED TRAP" />
-      <Sign position={[72, 0, 26]} label="# SKIDPAD" />
-      <Sign position={[21, 0, 108]} label="# NORTH LINK" />
-      <Sign position={[9, 0, 45]} label="# CIRCUIT" />
-
       <CircuitBuildings />
-    </group>
-  );
-}
-
-function Sign({ position }: { position: [number, number, number]; label: string }) {
-  return (
-    <group position={position}>
-      <mesh position={[0, 1.4, 0]}>
-        <boxGeometry args={[0.15, 2.8, 0.15]} />
-        <meshStandardMaterial color="#222" />
-      </mesh>
-      <mesh position={[0, 2.6, 0.1]}>
-        <planeGeometry args={[4.5, 0.9]} />
-        <meshStandardMaterial color="#0e1015" />
-      </mesh>
-      <mesh position={[0, 2.6, 0.12]}>
-        <planeGeometry args={[4.2, 0.55]} />
-        <meshStandardMaterial color="#e11d2e" emissive="#e11d2e" emissiveIntensity={0.35} />
-      </mesh>
     </group>
   );
 }
@@ -402,7 +361,7 @@ function DriveCar() {
   }, [scene]);
 
   const sim = useRef({
-    vehicle: createVehicleState({ x: 0, z: 22, yaw: 0 }),
+    vehicle: createVehicleState({ x: 0, z: 45, yaw: 0 }),
     acc: 0,
     bestLap: 0,
     lapTime: 0,
@@ -418,7 +377,7 @@ function DriveCar() {
     const onKey = (e: KeyboardEvent) => {
       if (e.code !== "KeyR") return;
       const st = sim.current;
-      st.vehicle = createVehicleState({ x: 0, z: 22, yaw: 0 });
+      st.vehicle = createVehicleState({ x: 0, z: 45, yaw: 0 });
       st.lapTime = 0;
       st.crossed = false;
       st.trapArmed = false;
@@ -435,13 +394,16 @@ function DriveCar() {
     const st = sim.current;
     const v = st.vehicle;
 
+    // Freeze the car while a project menu is open
+    const paused = useLab.getState().nearbyBuilding !== null;
+
     const reverseHeld = keys.back || keys.brake;
     // S / Space: brake while still rolling forward, then reverse once nearly stopped
     let throttle = 0;
     let brake = 0;
-    if (keys.forward && !reverseHeld) {
+    if (!paused && keys.forward && !reverseHeld) {
       throttle = 1;
-    } else if (reverseHeld && !keys.forward) {
+    } else if (!paused && reverseHeld && !keys.forward) {
       if (v.vx > 1.2) {
         brake = 1;
       } else {
@@ -452,10 +414,17 @@ function DriveCar() {
     const input = {
       throttle,
       brake,
-      steer: (keys.left ? 1 : 0) - (keys.right ? 1 : 0),
+      steer: paused ? 0 : (keys.left ? 1 : 0) - (keys.right ? 1 : 0),
     };
 
-    st.acc += Math.min(dt, 0.05);
+    if (paused) {
+      v.vx = 0;
+      v.vy = 0;
+      v.yawRate = 0;
+      st.acc = 0;
+    }
+
+    st.acc += paused ? 0 : Math.min(dt, 0.05);
     let steps = 0;
     while (st.acc >= FIXED_DT && steps < MAX_SUBSTEPS) {
       stepVehicle(v, input, setup, FIXED_DT);
