@@ -17,6 +17,10 @@ export function Hud() {
   const setTune = useLab((s) => s.setTune);
   const resetTune = useLab((s) => s.resetTune);
   const telemetry = useLab((s) => s.telemetry);
+  const nearbyBuilding = useLab((s) => s.nearbyBuilding);
+  const buildingToast = useLab((s) => s.buildingToast);
+  const dismissBuildingMenu = useLab((s) => s.dismissBuildingMenu);
+  const runBuildingAction = useLab((s) => s.runBuildingAction);
   const car = useActiveCar();
   const radar = computeRadar(tuning);
 
@@ -137,9 +141,31 @@ export function Hud() {
             </div>
           </div>
           <div className="zone-pill">{telemetry.zone}</div>
+          {nearbyBuilding && (
+            <div className="building-menu">
+              <header>
+                <div>
+                  <em>{nearbyBuilding.tagline}</em>
+                  <h3>{nearbyBuilding.name}</h3>
+                </div>
+                <button type="button" onClick={dismissBuildingMenu} aria-label="Close">
+                  ✕
+                </button>
+              </header>
+              <p>{nearbyBuilding.blurb}</p>
+              <div className="building-actions">
+                {nearbyBuilding.actions.map((a) => (
+                  <button key={a.id} type="button" onClick={() => runBuildingAction(a.id)}>
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+              {buildingToast && <div className="building-toast">{buildingToast}</div>}
+            </div>
+          )}
           <div className="help">
-            WASD / arrows to drive · Space to brake · R to respawn. Engine → trap speed · Tires → skidpad grip · Aero →
-            high-speed stability.
+            WASD / arrows to drive · Space to brake · R to respawn. Approach buildings for menus · knock crate piles
+            over. Engine → trap speed · Tires → skidpad grip.
           </div>
         </>
       )}

@@ -181,8 +181,8 @@ export function stepVehicle(s: VehicleState, input: VehicleInput, setup: CarSetu
   s.z += (cosY * s.vx - sinY * s.vy) * dt;
   s.yaw += s.yawRate * dt;
 
-  s.x = Math.max(-70, Math.min(70, s.x));
-  s.z = Math.max(-55, Math.min(95, s.z));
+  s.x = Math.max(-90, Math.min(110, s.x));
+  s.z = Math.max(-60, Math.min(130, s.z));
 
   const wheelSpeed = Math.abs(s.vx) * 3.6;
   s.gear = wheelSpeed < 40 ? 1 : wheelSpeed < 80 ? 2 : wheelSpeed < 130 ? 3 : wheelSpeed < 180 ? 4 : 5;
