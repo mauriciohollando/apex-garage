@@ -485,7 +485,7 @@ function DriveCar() {
     const steerInput = input.steer;
     if (group.current) {
       group.current.position.set(v.x, 0.05, v.z);
-      group.current.rotation.y = v.yaw + Math.PI;
+      group.current.rotation.y = v.yaw;
       group.current.rotation.z = THREE.MathUtils.lerp(
         group.current.rotation.z,
         -steerInput * 0.06 - (v.ay / 12) * 0.12,
