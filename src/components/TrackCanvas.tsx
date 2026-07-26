@@ -134,7 +134,6 @@ function CircuitTrack() {
         <meshStandardMaterial color="#f4f4f4" />
       </mesh>
 
-      <TrackProp url="/models/track/decoration-tents.glb" map={map} position={[-18, 0, 48]} scale={1} />
       <TrackProp url="/models/track/decoration-forest.glb" map={map} position={[90, 0, 70]} scale={1.1} />
       <TrackProp url="/models/track/track-finish.glb" map={map} position={[0, 0.02, 12]} scale={0.9} />
 
@@ -575,17 +574,15 @@ function TrackWorld() {
 }
 
 export function TrackCanvas() {
-  const carId = useLab((s) => s.carId);
   useEffect(() => {
     useLab.getState().resetLap();
     useLab.getState().setNearbyBuilding(null);
     vehicleBridge.state = null;
-  }, [carId]);
+  }, []);
 
   return (
     <KeyboardControls map={controlsMap}>
       <Canvas
-        key={`track-${carId}`}
         shadows
         dpr={[1, 1.5]}
         camera={{ position: [0, 5, 22], fov: 55 }}
@@ -602,7 +599,6 @@ export function TrackCanvas() {
   "/models/track/track-straight.glb",
   "/models/track/track-corner.glb",
   "/models/track/track-finish.glb",
-  "/models/track/decoration-tents.glb",
   "/models/track/decoration-forest.glb",
   ...BUILDINGS.map((b) => b.model),
 ].forEach((u) => useGLTF.preload(u));
